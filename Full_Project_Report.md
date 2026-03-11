@@ -1,67 +1,39 @@
-# 🏆 強化學習作業 (HW1) 開發全紀錄報告
+# 🏆 強化學習作業 (HW1) 開發全紀錄報告 (Streamlit 版)
 
-## 📅 開發日期: 2026-03-11
+## 📅 最後更新日期: 2026-03-11
 - **項目名稱**: 動態網格地圖與策略價值評估系統
-- **技術棧**: Python Flask, NumPy, HTML5, CSS3 (Glassmorphism), Vanilla JavaScript
+- **部署連結**: [https://sqqxhfujt9fjdhekqdzwqy.streamlit.app/](https://sqqxhfujt9fjdhekqdzwqy.streamlit.app/)
 - **GitHub 倉庫**: [https://github.com/mingliu-create/hw1_RL.git](https://github.com/mingliu-create/hw1_RL.git)
 
 ---
 
-## 🛠️ 第一部分：HW1-1 網格地圖開發 (分值 60%)
+## 🛠️ 技術架構升級說明 (Streamlit 兼容化)
 
-### 1.1 核心功能達成
-- **動態維度控制**: 使用者可從 UI 指定 $n \times n$ (範圍 5-9) 的網格大小。
-- **互動式配置**:
-  - **Step 1**: 點選設定 [起始點] (Green)。
-  - **Step 2**: 點選設定 [終點] (Red)。
-  - **Step 3**: 自動計算並限制使用者設定 $n-2$ 個 [障礙物] (Gray)，並在介面精準提示。
-- **重置功能**: 具備一鍵 Reset，即時清空地圖狀態。
-
-### 1.2 使用者介面 (UI/UX) 優化
-- **現代設計風格**: 採用 **毛玻璃效果 (Glassmorphism)** 與深色模式。
-- **流暢動態輔助**: 加入了滑鼠懸停 (Hover) 縮放動畫與漸變色彩回饋。
-- **操作導引**: 狀態列會根據使用者操作階段實時切換中文提示。
+為了解決 Streamlit Cloud 在處理 Flask 後端 AJAX 請求時的連線瓶頸與訊號衝突，本專案進行了重大的架構優化：
+1. **算法前置 (Client-side Calculation)**: 將原先位於 `app.py` 的 Bellman 策略評估邏輯完全移植到 `static/script.js` 中。這消除了對 Flask API 的依賴，大幅提升了在雲端環境的執行效率與稳定性。
+2. **Streamlit 組件化**: 使用 `streamlit.components.v1` 將完整的 HTML/CSS/JS 互動應用封裝進 Streamlit 入口點檔案 `streamlit_app.py`。
 
 ---
 
-## 📈 第二部分：HW1-2 策略顯示與價值評估 (分值 40%)
+## 🎯 HW1 核心需求達成狀況
 
-### 2.1 隨機策略顯示 (20%)
-- 網格生成時，後端或前端會自動為每個狀態 $s$ 生成隨機行動 $\pi(s)$。
-- 在網格中央顯示相應的箭頭符號 (↑, ↓, ←, →)。
+### 1. 網格地圖開發 (HW1-1)
+- **維度自定義**: 5x5 到 9x9 實時切換。
+- **操作流完整性**: 起點 -> 終點 -> $n-2$ 個障礙物的嚴格設定邏輯。
+- **視覺美化**: 採用 Premium Glassmorphism 設計，適配 Streamlit 介面。
 
-### 2.2 策略評估算法正確性 (15%)
-- **數學原理**: 嚴格執行 Bellman 方程式 $V(s) = R + \gamma V(s')$。
-- **參數設定**:
-  - 折扣因子 $\gamma = 0.9$。
-  - 獎勵函式: 到達目的地 $+100$，普通步數 $-1$，撞牆/撞障礙物則留在原地並扣 $-1$。
-- **收斂機制**: 採用 NumPy 進行向量化計算，確保在 $10^{-4}$ 閾值內收斂。
-
-### 2.3 視覺化成果與 heatmap 強化
-- **數值顯示**: 每個單元格右下角精準顯示收斂後的價值 $V(s)$。
-- **動態高亮 (Golden Path)**: 在評估後，價值較高的路徑箭頭會呈現 **「金黃色發光效果」**，幫助使用者直觀識別優質策略。
+### 2. 策略顯示與價值評估 (HW1-2)
+- **隨機策略**: 每格初始化即生成隨機箭頭 $\pi(s)$。
+- **價值計算**: 實現了 $V(s) = R + \gamma V(s')$ 疊代算法。
+- **黃金路徑高亮**: 透過 JavaScript 實時渲染，$V(s)$ 最高的動作會觸發金色發光特效。
 
 ---
 
-## 🧱 程式碼結構說明 (5%)
-- **`app.py`**: 後端主程式。採用 `GridWorldEvaluator` 類別封裝，達到邏輯與路由分離。
-- **`static/script.js`**: 前端核心。包含網格操作、API 串接以及動態視覺回饋邏輯。
-- **`static/style.css`**: 定義所有視覺層級，包含 Glassmorphism 特效與按鈕樣式。
-- **`templates/index.html`**: 語義化 HTML5 結構，確保良好的 SEO 與可存取性。
+## 🏗️ 最終專案結構
+- **`streamlit_app.py`**: 作為雲端啟動檔案。
+- **`static/script.js`**: 包含 RL 計算邏輯與 UI 互動。
+- **`static/style.css`**: 毛玻璃視覺外觀。
+- **`requirements.txt`**: 已更新，包含 `streamlit` 以確保雲端正確安裝。
 
 ---
-
-## 🔗 版本控管與交付
-1. **.gitignore**: 設定排除 `__pycache__` 等暫存檔，確保倉庫乾淨。
-2. **README.md**: 提供專業的快速啟動指南。
-3. **GitHub Push**: 成功推送至指定的遠端倉庫 `main` 分支。
-
----
-
-## 🚀 快速啟動指南
-1. 安裝環境: `pip install flask numpy`
-2. 執行應用: `python app.py`
-3. 訪問網址: `http://127.0.0.1:5000/`
-
----
-**本報告由 Antigravity AI 協助整理，恭喜您順利完成所有開發任務！**
+**本報告由 Antigravity AI 協助整理，確認所有功能均已於 Streamlit Cloud 測試運作正常。**
