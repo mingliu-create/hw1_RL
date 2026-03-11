@@ -96,10 +96,7 @@ def evaluate():
     return jsonify(values=v_values)
 
 if __name__ == '__main__':
-    # 雲端環境部署優化：
-    # 1. host='0.0.0.0' 允許外部連線
-    # 2. debug=False 避免重載器 (Reloader) 在雲端環境引發訊號錯誤
-    # 3. port 使用環境變數，若無則預設 5000
+    # 適應雲端平台分配的 Port (如 Render, Railway, etc.)
     import os
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port, debug=False)
+    port = int(os.environ.get("PORT", 10000)) # 許多平台預設使用 10000 或由系統分配
+    app.run(host='0.0.0.0', port=port)
