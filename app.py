@@ -96,4 +96,10 @@ def evaluate():
     return jsonify(values=v_values)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # 雲端環境部署優化：
+    # 1. host='0.0.0.0' 允許外部連線
+    # 2. debug=False 避免重載器 (Reloader) 在雲端環境引發訊號錯誤
+    # 3. port 使用環境變數，若無則預設 5000
+    import os
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
