@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Grid Map Generator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <!-- Modern Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <!-- Meta tags for SEO -->
+    <meta name="description"
+        content="A modern grid map generator built with Flask, allowing users to select start, end, and obstacle cells.">
+</head>
+
+<body>
+    <div class="container">
+        <div class="glass-header">
+            <h1>Grid Map Pro</h1>
+            <p>Customize your grid map: Select start, end, and obstacles.</p>
+        </div>
+
+        <div class="controls-card glass">
+            <div class="input-group">
+                <label for="dimension-n">Grid Dimension (n):</label>
+                <input type="number" id="dimension-n" min="5" max="9" value="7" placeholder="5-9">
+            </div>
+            <button id="generate-btn" class="primary-btn">Initialize Grid</button>
+            <button id="evaluate-btn" class="accent-btn">Evaluate Policy</button>
+            <button id="reset-btn" class="secondary-btn">Reset Map</button>
+        </div>
+
+        <div class="status-panel glass">
+            <span id="instruction-text">Click Initialize Grid to begin.</span>
+        </div>
+
+        <div id="grid-container" class="grid-card">
+            <!-- Grid will be dynamically generated here -->
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+
+</html>
