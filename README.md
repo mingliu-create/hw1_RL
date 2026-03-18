@@ -13,7 +13,9 @@
    - 點擊設定 **紅色終點 (End)**。
    - 點擊設定 **$n-2$ 個灰色障礙物 (Obstacles)**。
 3. **策略顯示**：自動為每個單元格生成隨機行動策略（箭頭）。
-4. **價值評估 (Bellman Equation)**：移植核心算法至 JavaScript，確保在 Streamlit 雲端環境中具備毫秒級的響應速度，無須後端通訊。
+4. **價值評估 (Policy Evaluation)**：基於當前(隨機)策略計算期望回報 $V(s)$。
+5. **最佳政策推導 (Value Iteration)**：推導並顯示每個格子的最佳行動與最佳政策下的期望回報 $V^*(s)$。
+6. **雲端架構 (Streamlit)**：移植核心算法至 JavaScript，確保在 Streamlit 雲端環境中具備毫秒級的響應速度，無須後端通訊。
 
 ## 🛠️ 技術棧
 - **架構**: Streamlit (Python Entry Point)

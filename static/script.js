@@ -1,5 +1,5 @@
 /**
- * HW1: Grid Map & Policy Evaluation (Streamlit Optimized)
+ * HW1: Grid Map & Policy Evaluation & Value Iteration
  * Client-side Logic (Calculation moved to JS for Streamlit compatibility)
  */
 document.addEventListener('DOMContentLoaded', () => {
@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const gridContainer = document.getElementById('grid-container');
     const generateBtn = document.getElementById('generate-btn');
     const evaluateBtn = document.getElementById('evaluate-btn');
+    const optimalBtn = document.getElementById('optimal-btn');
     const resetBtn = document.getElementById('reset-btn');
     const dimensionInput = document.getElementById('dimension-n');
     const instructionText = document.getElementById('instruction-text');
@@ -26,8 +27,9 @@ document.addEventListener('DOMContentLoaded', () => {
         start: "🔴 第二步：選擇 [終點] (紅色)",
         end: (count) => `⚪ 第三步：設定 ${count} 個 [障礙物] (灰色)`,
         obstacle: (count) => `還需要設定 ${count} 個障礙物...`,
-        ready: "✨ 配置完成！請點擊「Evaluate Policy」進行計算。",
-        calculating: "⏳ 正在計算 Bellman 方程式 (JS 引擎)...",
+        ready: "✨ 配置完成！請選擇「Evaluate Policy」或「Value Iteration」。",
+        calculating: "⏳ 正在計算 Policy Evaluation...",
+        calculatingOptimal: "⏳ 正在計算 Value Iteration...",
         done: "配置完成。按 Reset 重置地圖。"
     };
 
@@ -95,7 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * Bellman 策略評估 (核心算法移植至 JS)
+     * Policy Evaluation (基於當前 Policy 評估)
      */
     function runPolicyEvaluation() {
         if (!startSet || !endSet || obstaclesCount < maxObstacles) {
@@ -138,10 +140,85 @@ document.addEventListener('DOMContentLoaded', () => {
             V = newV;
             if (delta < threshold) break;
         }
-        updateUI(V);
+        updateUI(V, "✅ Policy Evaluation 完成！顯示當前策略的價值。");
     }
 
-    function updateUI(values) {
+    /**
+     * Value Iteration (計算最佳政策與最佳價值)
+     */
+    function runValueIteration() {
+        if (!startSet || !endSet || obstaclesCount < maxObstacles) {
+            alert("請先完成地圖配置。");
+            return;
+        }
+
+        updateInstructions(messages.calculatingOptimal);
+
+        const obstacleIndices = new Set(Array.from(document.querySelectorAll('.cell.obstacle')).map(c => parseInt(c.dataset.index)));
+        const gamma = 0.9;
+        const threshold = 1e-4;
+        const actionsList = ['up', 'down', 'left', 'right'];
+        const actions = { 'up': [-1, 0], 'down': [1, 0], 'left': [0, -1], 'right': [0, 1] };
+
+        let V = new Array(n * n).fill(0);
+        let optimalPolicy = new Array(n * n).fill('up'); // default
+
+        for (let iter = 0; iter < 1000; iter++) {
+            let delta = 0;
+            let newV = [...V];
+
+            for (let s = 0; s < n * n; s++) {
+                if (s === endIndex || obstacleIndices.has(s)) continue;
+
+                let maxVal = -Infinity;
+                let bestAction = 'up';
+
+                for (let act of actionsList) {
+                    const [dr, dc] = actions[act];
+                    const r = Math.floor(s / n), c = s % n;
+                    const nr = r + dr, nc = c + dc;
+
+                    let nextS = s;
+                    if (nr >= 0 && nr < n && nc >= 0 && nc < n) {
+                        const candidateS = nr * n + nc;
+                        if (!obstacleIndices.has(candidateS)) nextS = candidateS;
+                    }
+
+                    const reward = (nextS === endIndex) ? 100 : -1;
+                    const vNext = reward + gamma * V[nextS];
+
+                    if (vNext > maxVal) {
+                        maxVal = vNext;
+                        bestAction = act;
+                    }
+                }
+
+                newV[s] = maxVal;
+                optimalPolicy[s] = bestAction;
+                delta = Math.max(delta, Math.abs(maxVal - V[s]));
+            }
+            V = newV;
+            if (delta < threshold) break;
+        }
+
+        // --- 更新每個 state 的最佳政策 ---
+        for (let s = 0; s < n * n; s++) {
+            if (s !== endIndex && !obstacleIndices.has(s)) {
+                cellPolicies[s] = optimalPolicy[s];
+                const cell = document.querySelector(`.cell[data-index='${s}']`);
+                if (cell) {
+                    const arrowSpan = cell.querySelector('.policy-arrow');
+                    if (arrowSpan) {
+                        arrowSpan.textContent = arrows[optimalPolicy[s]];
+                    }
+                }
+            }
+        }
+
+        updateUI(V, "🏆 Value Iteration 完成！已推導並顯示最佳政策與價值。");
+    }
+
+    function updateUI(values, successMsg) {
         document.querySelectorAll('.cell').forEach((cell, i) => {
             const valLabel = cell.querySelector('.value-label');
             const arrow = cell.querySelector('.policy-arrow');
@@ -161,15 +238,17 @@ document.addEventListener('DOMContentLoaded', () => {
                         arrow.style.textShadow = "0 0 10px rgba(251, 191, 36, 0.8)";
                     } else {
                         arrow.style.color = "rgba(255, 255, 255, 0.7)";
+                        arrow.style.textShadow = "none";
                     }
                 }
             }
         });
-        updateInstructions("✅ 評估完成！(JS 運算成功)");
+        updateInstructions(successMsg);
     }
 
     generateBtn.addEventListener('click', createGrid);
     evaluateBtn.addEventListener('click', runPolicyEvaluation);
+    if (optimalBtn) optimalBtn.addEventListener('click', runValueIteration);
     resetBtn.addEventListener('click', createGrid);
     createGrid();
 });
