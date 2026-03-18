@@ -73,6 +73,51 @@ class GridWorldEvaluator:
                 
         return V.tolist()
 
+    def run_value_iteration(self):
+        # 初始化所有狀態價值為 0
+        V = np.zeros(self.n * self.n)
+        optimal_policy = {}
+        
+        for _ in range(self.max_iter):
+            delta = 0
+            new_V = np.copy(V)
+            
+            for s in range(self.n * self.n):
+                if s == self.end or s in self.obstacles:
+                    continue
+                
+                max_v = float('-inf')
+                best_action = 'up'
+                
+                # 遍歷所有可能行動
+                for action_name, (dr, dc) in self.actions.items():
+                    r, c = s // self.n, s % self.n
+                    nr, nc = r + dr, c + dc
+                    
+                    if 0 <= nr < self.n and 0 <= nc < self.n:
+                        next_s = nr * self.n + nc
+                        if next_s in self.obstacles:
+                            next_s = s  
+                    else:
+                        next_s = s      
+                    
+                    reward = 100 if next_s == self.end else -1
+                    v_new = reward + self.gamma * V[next_s]
+                    
+                    if v_new > max_v:
+                        max_v = v_new
+                        best_action = action_name
+                
+                new_V[s] = max_v
+                optimal_policy[str(s)] = best_action
+                delta = max(delta, abs(max_v - V[s]))
+            
+            V = new_V
+            if delta < self.threshold:
+                break
+                
+        return {"values": V.tolist(), "policy": optimal_policy}
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -87,13 +132,30 @@ def evaluate():
         start=data['start'],
         end=data['end'],
         obstacles=data['obstacles'],
-        policy=data['policy']
+        policy=data.get('policy', {})
     )
     
     # 計算結果
     v_values = evaluator.run_evaluation()
     
     return jsonify(values=v_values)
+
+@app.route('/value_iteration', methods=['POST'])
+def value_iteration():
+    data = request.json
+    
+    evaluator = GridWorldEvaluator(
+        n=data['n'],
+        start=data['start'],
+        end=data['end'],
+        obstacles=data['obstacles'],
+        policy={}
+    )
+    
+    # 計算最佳價值與政策
+    result = evaluator.run_value_iteration()
+    
+    return jsonify(values=result["values"], policy=result["policy"])
 
 if __name__ == '__main__':
     # 適應雲端平台分配的 Port (如 Render, Railway, etc.)
